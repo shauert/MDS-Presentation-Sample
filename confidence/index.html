@@ -1,0 +1,66 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="MDS Confidence"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="theme-color" content="#0b5c8a"><link rel="apple-touch-icon" href="icon-180.png"><link rel="manifest" href="manifest.webmanifest"><title>MDS Confidence</title><style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}.mx{padding-left:max(16px,env(safe-area-inset-left))!important;padding-right:max(16px,env(safe-area-inset-right))!important;padding-bottom:max(24px,env(safe-area-inset-bottom))!important}.mx .opt,.mx .cbtn span{min-height:48px}
+body{margin:0;background:#fff}
+.mx{font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:#1f2933;max-width:780px;margin:0 auto;padding:16px;position:relative}
+.mx h2{font-size:1.25rem;margin:0 0 4px;color:#0b3c5d}
+.mx .sub{margin:0 0 14px;color:#52606d;font-size:.95rem}
+.mx button{font:inherit;cursor:pointer;border-radius:8px;border:2px solid #0b5c8a;background:#0b5c8a;color:#fff;padding:8px 16px;min-height:42px}
+.mx button.alt{background:#fff;color:#0b5c8a}
+.mx button:disabled{opacity:.5;cursor:not-allowed}
+.mx button:focus-visible,.mx .chip:focus-visible,.mx textarea:focus-visible{outline:3px solid #f2a900;outline-offset:2px}
+.mx .card{border:1px solid #cbd2d9;border-radius:12px;padding:16px;margin:0 0 14px;background:#fff}
+.mx .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.mx .msg{margin-top:12px;padding:10px 12px;border-radius:8px;background:#eef4f8;border-left:5px solid #0b5c8a}
+.mx .msg.good{background:#e6f4ea;border-color:#1e7e34}
+.mx .msg.bad{background:#fdecea;border-color:#b3261e}
+.mx .msg.warn{background:#fff6dd;border-color:#b07d00}
+.mx .chip{background:#fff;border:2px solid #7b8794;border-radius:10px;padding:9px 12px;margin:5px;cursor:grab;user-select:none;-webkit-user-select:none;touch-action:none;display:block}
+.mx .chip.sel{border-color:#0b5c8a;box-shadow:0 0 0 3px #b7d9ee}
+.mx .chip.lifting{opacity:.35}
+.mx .chip.ghost{position:fixed;z-index:50;pointer-events:none;box-shadow:0 8px 20px rgba(0,0,0,.25);margin:0;transform:rotate(1.5deg)}
+.mx .chip.ok{border-color:#1e7e34;background:#e6f4ea}
+.mx .chip.no{border-color:#b3261e;background:#fdecea}
+.mx .chip.locked{cursor:default}
+.mx .zone{min-height:54px;border:2px dashed #9aa5b1;border-radius:10px;background:#f7f9fb;padding:2px}
+.mx .zone.over{border-color:#0b5c8a;background:#e3f0f9}
+.mx .bank{background:#f0f2f5;margin-top:10px}
+.mx .bank:empty::after{content:"All items placed";color:#7b8794;padding:12px;display:block}
+.mx .slot:empty::after{content:"Drop here";color:#7b8794;padding:14px 10px;display:block;font-size:.9rem}
+.mx .count{font-weight:600;margin-top:8px}
+.mx .lab{font-weight:700;color:#0b5c8a;text-transform:uppercase;font-size:.8rem;letter-spacing:.06em}.mx .q{margin:6px 0 10px;font-size:1.05rem}.mx .opt{display:block;border:1px solid #cbd2d9;border-radius:8px;padding:9px 12px;margin:6px 0;cursor:pointer}.mx .opt:has(input:checked){border-color:#0b5c8a;background:#e3f0f9}.mx .cbtn{cursor:pointer}.mx .cbtn input{position:absolute;opacity:0}.mx .cbtn span{display:inline-block;border:2px solid #0b5c8a;border-radius:8px;padding:8px 14px;min-height:42px}.mx .cbtn input:checked+span{background:#0b5c8a;color:#fff}.mx .cbtn input:focus-visible+span{outline:3px solid #f2a900;outline-offset:2px}.mx .tb{border-collapse:collapse;width:100%}.mx .tb th,.mx .tb td{border:1px solid #cbd2d9;padding:6px 10px;text-align:left}</style></head><body><div class="mx" id="root"><h2>Confidence rating: MDS</h2><p class="sub">For each question, choose an answer and rate how confident you are before you submit. The feedback compares your confidence with your result.</p><div id="cq"></div><div id="sum" class="card" hidden></div></div><script>const Q=[{"q": "Which of the following is a component of the base IPSS-R score?", "o": ["Serum ferritin", "Bone marrow blast percentage", "Serum LDH", "Serum erythropoietin level"], "a": 1, "e": "The IPSS-R uses the percentage of blasts in the bone marrow, chromosome changes, and the depth of anemia, low platelets and low neutrophils."}, {"q": "Which patient group is the established target for lenalidomide in lower risk MDS with anemia?", "o": ["Patients with a normal karyotype", "Patients with del(5q)", "Patients with more than 20 percent blasts", "Patients being prepared for transplant"], "a": 1, "e": "Lenalidomide is an option for lower risk MDS with anemia in patients who have del(5q), a missing piece of chromosome 5."}, {"q": "Which treatment is described as the only potentially curative option for MDS?", "o": ["Azacitidine", "Luspatercept", "Allogeneic stem cell transplant", "Erythropoiesis stimulating agents"], "a": 2, "e": "Allogeneic stem cell transplant is the only potentially curative treatment. The other options improve counts, symptoms or survival but are not curative."}],CONF=["Guess", "Unsure", "Fairly sure", "Certain"];
+const host=document.getElementById('cq'),sum=document.getElementById('sum');
+const res=[];let idx=0;
+function esc(s){return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+function render(){
+  const q=Q[idx];
+  let h='<div class="card"><div class="lab">Question '+(idx+1)+' of '+Q.length+'</div><p class="q">'+esc(q.q)+'</p><div role="radiogroup" aria-label="Answer choices">';
+  q.o.forEach((o,i)=>{h+='<label class="opt"><input type="radio" name="a" value="'+i+'"> <span>'+String.fromCharCode(65+i)+'. '+esc(o)+'</span></label>'});
+  h+='</div><p class="sub" style="margin-top:12px">How confident are you in this answer?</p><div class="row conf" role="radiogroup" aria-label="Confidence">';
+  CONF.forEach((c,i)=>{h+='<label class="cbtn"><input type="radio" name="c" value="'+i+'"><span>'+c+'</span></label>'});
+  h+='</div><div class="row"><button id="sub" disabled>Submit</button></div><div id="fb"></div></div>';
+  host.innerHTML=h;
+  const sub=document.getElementById('sub');
+  host.addEventListener('change',()=>{sub.disabled=!(host.querySelector('input[name=a]:checked')&&host.querySelector('input[name=c]:checked'))});
+  sub.onclick=()=>{
+    const a=+host.querySelector('input[name=a]:checked').value,c=+host.querySelector('input[name=c]:checked').value;
+    const ok=a===q.a;res.push({ok,c});
+    host.querySelectorAll('input').forEach(i=>i.disabled=true);sub.disabled=true;
+    const hi=c>=2;let cal,cls;
+    if(ok&&hi){cal='Your confidence matched your result.';cls='good'}
+    else if(ok){cal='Correct, but you were not confident. Review this topic so the knowledge becomes secure.';cls='warn'}
+    else if(hi){cal='Confident but incorrect. This may be a misconception, so read the explanation closely.';cls='bad'}
+    else{cal='Incorrect, and your uncertainty was accurate. This topic is one to study.';cls='warn'}
+    document.getElementById('fb').innerHTML='<div class="msg '+cls+'"><b>'+(ok?'Correct.':'Not quite. The answer is '+String.fromCharCode(65+q.a)+'. '+esc(q.o[q.a])+'.')+'</b> '+esc(q.e)+'<br><br><b>Calibration:</b> '+cal+'</div><div class="row"><button id="nx">'+(idx<Q.length-1?'Next question':'See summary')+'</button></div>';
+    document.getElementById('nx').onclick=()=>{idx++;if(idx<Q.length)render();else done()};
+  };
+}
+function done(){
+  host.innerHTML='';sum.hidden=false;
+  const right=res.filter(r=>r.ok).length,hiWrong=res.filter(r=>!r.ok&&r.c>=2).length,loRight=res.filter(r=>r.ok&&r.c<2).length;
+  let h='<h2>Summary</h2><p class="count">Score: '+right+' of '+Q.length+'</p><table class="tb"><tr><th>Question</th><th>Confidence</th><th>Result</th></tr>';
+  res.forEach((r,i)=>{h+='<tr><td>'+(i+1)+'</td><td>'+CONF[r.c]+'</td><td>'+(r.ok?'Correct':'Incorrect')+'</td></tr>'});
+  h+='</table><p>Confident but incorrect: <b>'+hiWrong+'</b>. Correct but unsure: <b>'+loRight+'</b>.</p><div class="row"><button id="again">Start over</button></div>';
+  sum.innerHTML=h;document.getElementById('again').onclick=()=>{res.length=0;idx=0;sum.hidden=true;render()};
+}
+render();
+if('serviceWorker' in navigator&&location.protocol.indexOf('http')===0){navigator.serviceWorker.register('sw.js').catch(function(){})}</script></body></html>
